@@ -7,6 +7,10 @@ var Dispatcher = function () {
 	var filters = [];
 
 	function match (pattern, candidate) {
+		if (typeof pattern !== 'object') // No pattern, automatic match
+			return true;
+		if (typeof candidate !== 'object') // No data, can't match pattern
+			return false;
 		for (var key in pattern) {
 			if (!pattern.hasOwnProperty(key)) continue;
 			if (!candidate.hasOwnProperty(key)) return false;
@@ -30,13 +34,12 @@ var Dispatcher = function () {
 	var pub = function (e, data) {
 		if (events[e]) {
 			events[e].forEach(function (el) {
-				if (el.pattern == undefined || match(el.pattern, data))
+				if (match(el.pattern, data))
 					el.callback.call(null /* this value tbd */, data, e);
 			});
 		}
 		filters.forEach(function (el) {
-			if (el.test(e)
-			    && (el.pattern == undefined || match(el.pattern, data)))
+			if (el.test(e) && match(el.pattern, data))
 				el.callback.call(null /* this value tbd */, data, e);
 		});
 	};
