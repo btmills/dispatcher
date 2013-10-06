@@ -3,10 +3,15 @@
   var Dispatcher;
 
   Dispatcher = function() {
-    return function() {
-      var events, filters, match, pub, sub;
-      events = {};
+    return Dispatcher = (function() {
+      var filters, match, topics;
+
+      function Dispatcher() {}
+
+      topics = {};
+
       filters = [];
+
       match = function(pattern, candidate) {
         var key;
         if (typeof pattern !== 'object') {
@@ -34,63 +39,84 @@
         }
         return true;
       };
+
       /*
-      	Publish event e, with optional data
+      	Publish to a topic
+      	pub(topic[, data])
+      	topic: (String) Topic to which to publish
+      	data: (Object, optional) Data to attach to the event
       */
 
-      pub = function(e, data) {
-        if (events[e]) {
-          events[e].forEach(function(el) {
-            if (match(el.pattern, data)) {
-              return el.callback.call(null, data, e);
+
+      Dispatcher.prototype.pub = function(topic, data) {
+        if (topics[topic]) {
+          topics[topic].forEach(function(subscription) {
+            if (!match(subscription.pattern, data)) {
+              return;
             }
+            return subscription.callback.call(subscription.context, data, topic);
           });
         }
-        return filters.forEach(function(el) {
-          if (el.test(e && match(el.pattern, data))) {
-            return el.callback.call(null, data, e);
+        return filters.forEach(function(subscription) {
+          if (!subscription.test(topic && match(subscription.pattern, data))) {
+            return;
           }
+          return subscription.callback.call(subscription.context, data, topic);
         });
       };
+
       /*
-      	Subscribe to an event
-      	e is either a string literal, or a RegExp.
-      	pattern is an object pattern.
+      	Subscribe to a topic
+      	sub(topic[, pattern[, context]], callback)
+      	topic: (String|RegExp) Topic to which to subscribe
+      	pattern: (Object, optional) Filter event data to match pattern
+      	context: (Object, optional) Context to be supplied to this of callback
+      	callback: (Function) Callback function
       */
 
-      sub = function(e, pattern, cb) {
-        if (arguments.length < 3) {
-          cb = pattern;
-          pattern = void 0;
+
+      Dispatcher.prototype.sub = function(topic, pattern, context, callback) {
+        switch (arguments.length) {
+          case 0 || 1 || 2:
+            return false;
+          case 2:
+            callback = pattern;
+            pattern = void 0;
+            break;
+          case 3:
+            callback = context;
+            context = void 0;
         }
-        if (typeof e === 'string') {
-          if (!Array.isArray(events[e])) {
-            events[e] = [];
+        if (typeof topic === 'string') {
+          if (!Array.isArray(topics[topic])) {
+            topics[topic] = [];
           }
-          return events[e].push({
+          return topics[topic].push({
             pattern: pattern,
-            callback: cb
+            context: context,
+            callback: callback
           });
-        } else if (e instanceof RegExp) {
+        } else if (topic instanceof RegExp) {
           return filters.push({
             test: function() {
-              return e.test.apply(e, arguments);
+              return topic.test.apply(topic, arguments);
             },
             pattern: pattern,
-            callback: cb
+            context: context,
+            callback: callback
           });
         }
       };
+
       /*
       	No unsub function because I don't anticipate needing it.
       	This has changed. I will add one. Eventually.
       */
 
-      return {
-        pub: pub,
-        sub: sub
-      };
-    };
+
+      return Dispatcher;
+
+    })();
   };
 
   (function(root, factory) {

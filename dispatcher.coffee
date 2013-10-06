@@ -1,7 +1,5 @@
-Dispatcher = -> ->
-
-	events = {}
-
+Dispatcher = -> class Dispatcher
+	topics = {}
 	filters = []
 
 	match = (pattern, candidate) ->
@@ -26,44 +24,55 @@ Dispatcher = -> ->
 		return true
 
 	###
-	Publish event e, with optional data
+	Publish to a topic
+	pub(topic[, data])
+	topic: (String) Topic to which to publish
+	data: (Object, optional) Data to attach to the event
 	###
-	pub = (e, data) ->
-		if events[e] then events[e].forEach (el) ->
-			el.callback.call null, data, e if match el.pattern, data
-		filters.forEach (el) ->
-			el.callback.call null, data, e if el.test e and match el.pattern, data
+	pub: (topic, data) ->
+		if topics[topic] then topics[topic].forEach (subscription) ->
+			return unless match subscription.pattern, data
+			subscription.callback.call subscription.context, data, topic
+		filters.forEach (subscription) ->
+			return unless subscription.test topic and match subscription.pattern, data
+			subscription.callback.call subscription.context, data, topic
 
 	###
-	Subscribe to an event
-	e is either a string literal, or a RegExp.
-	pattern is an object pattern.
+	Subscribe to a topic
+	sub(topic[, pattern[, context]], callback)
+	topic: (String|RegExp) Topic to which to subscribe
+	pattern: (Object, optional) Filter event data to match pattern
+	context: (Object, optional) Context to be supplied to this of callback
+	callback: (Function) Callback function
 	###
-	sub = (e, pattern, cb) ->
-		if arguments.length < 3
-			cb = pattern
-			pattern = undefined
+	sub: (topic, pattern, context, callback) ->
+		switch arguments.length
+			when 0 or 1 or 2
+				return false
+			when 2
+				callback = pattern
+				pattern = undefined
+			when 3
+				callback = context
+				context = undefined
 
-		if typeof e == 'string'
-			events[e] = [] unless Array.isArray events[e]
-			events[e].push
+		if typeof topic == 'string'
+			topics[topic] = [] unless Array.isArray topics[topic]
+			topics[topic].push
 				pattern: pattern
-				callback: cb
-		else if e instanceof RegExp
+				context: context
+				callback: callback
+		else if topic instanceof RegExp
 			filters.push
-				test: -> e.test.apply e, arguments
+				test: -> topic.test.apply topic, arguments
 				pattern: pattern
-				callback: cb
+				context: context
+				callback: callback
 
 	###
 	No unsub function because I don't anticipate needing it.
 	This has changed. I will add one. Eventually.
 	###
-
-	return {
-		pub: pub
-		sub: sub
-	}
 
 do (root = this, factory = Dispatcher) ->
 	if typeof define == 'function' && define.amd
