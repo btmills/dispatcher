@@ -1,4 +1,6 @@
-Dispatcher = -> class Dispatcher
+'use strict'
+
+factory = -> return class Dispatcher
 	topics = {}
 	filters = []
 
@@ -12,9 +14,10 @@ Dispatcher = -> class Dispatcher
 			continue unless pattern.hasOwnProperty key
 			return false unless candidate.hasOwnProperty key
 
-			if ['string', 'number', 'boolean'].indexOf typeof pattern[key]  >= 0
+			if ['string', 'number', 'boolean'].indexOf typeof pattern[key] >= 0
 				return false unless pattern[key] == candidate[key]
-			else if pattern[key] instanceof RegExp and not pattern[key].test candidate[key]
+			else if pattern[key] instanceof RegExp and
+			        not pattern[key].test candidate[key]
 				return false
 			else if typeof pattern[key] == 'object' and
 			        typeof candidate[key] == 'object' and
@@ -34,7 +37,8 @@ Dispatcher = -> class Dispatcher
 			return unless match subscription.pattern, data
 			subscription.callback.call subscription.context, data, topic
 		filters.forEach (subscription) ->
-			return unless subscription.test topic and match subscription.pattern, data
+			return unless subscription.test topic and
+			              match subscription.pattern, data
 			subscription.callback.call subscription.context, data, topic
 
 	###
@@ -74,7 +78,11 @@ Dispatcher = -> class Dispatcher
 	This has changed. I will add one. Eventually.
 	###
 
-do (root = this, factory = Dispatcher) ->
+###
+Universal Module Definition
+https://github.com/umdjs/umd/blob/master/returnExports.js
+###
+do (root = this, factory) ->
 	if typeof define == 'function' && define.amd
 		define factory
 	else if typeof exports == 'object'
