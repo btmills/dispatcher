@@ -51,7 +51,7 @@ factory = -> return class Dispatcher
 	###
 	sub: (topic, pattern, context, callback) ->
 		switch arguments.length
-			when 0 or 1 or 2
+			when 0 or 1
 				return false
 			when 2
 				callback = pattern
