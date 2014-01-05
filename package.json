@@ -1,0 +1,31 @@
+{
+  "name": "dispatcher",
+  "version": "0.0.1",
+  "description": "Event dispatch with filters",
+  "main": "index.js",
+  "scripts": {
+    "build": "coffee -co lib/ src/*",
+    "clean": "rm lib/*.js",
+    "prepublish": "npm run build",
+    "postpublish": "npm run clean"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/btmills/dispatcher.git"
+  },
+  "keywords": [
+    "event",
+    "dispatch"
+  ],
+  "author": {
+    "name": "Brandon Mills",
+    "email": "mills.brandont@gmail.com",
+    "url": "https://github.com/btmills",
+    "twitter": "@brandontmills"
+  },
+  "license": "BSD-3-Clause",
+  "bugs": {
+    "url": "https://github.com/btmills/dispatcher/issues"
+  },
+  "homepage": "https://github.com/btmills/dispatcher"
+}
